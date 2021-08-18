@@ -1,6 +1,13 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ConnectableObservable, interval, Observable, of } from 'rxjs';
+import {
+  ConnectableObservable,
+  iif,
+  interval,
+  Observable,
+  of,
+  pipe
+} from 'rxjs';
 import {
   catchError,
   concatMap,
@@ -37,11 +44,29 @@ export class TodoService {
     //   share(),
     //   tap({ error: () => this.toolbelt.offerHardReload() })
     // );
-    return interval(5000).pipe(
-      switchMap(() => this.query()),
-      share(),
-      tap({ error: () => this.toolbelt.offerHardReload() })
+
+    return this.settings.settings$.pipe(
+      switchMap((data) =>
+        iif(
+          () => data.isPollingEnabled,
+          interval(data.pollingInterval),
+          of(1)
+        ).pipe(
+          switchMap(() => this.query()),
+          share(),
+          tap({ error: () => this.toolbelt.offerHardReload() })
+        )
+      )
     );
+
+    // switchMap((data) =>
+    //   interval(data.pollingInterval).pipe(
+    //     switchMap(() => this.query()),
+    //     share(),
+    //     tap({ error: () => this.toolbelt.offerHardReload() })
+    //   )
+    // )
+    // );
     // return interval(5000).pipe(
     //   exhaustMap(() => this.query()),
     //   share(),

@@ -13,7 +13,12 @@ export class TodoSettings {
     isPollingEnabled: true,
     pollingInterval: 5000
   });
+  //  prev =  {
+  //     isPollingEnabled: true,
+  //     pollingInterval: 5000
+  //   }
 
+  //   next={ pollingInterval: 300 }
   settings$ = this.settings$$.pipe(
     scan((prev, next) => ({ ...prev, ...next })),
     shareReplay(1)
