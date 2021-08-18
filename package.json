@@ -16,7 +16,8 @@
     "start:api": "ng serve --project api",
     "start:playground": "nodemon --config apps/playground/nodemon.json",
     "test": "ng test",
-    "postinstall": "node ./decorate-angular-cli.js && ngcc --properties es2015 browser module main"
+    "postinstall": "node ./decorate-angular-cli.js && ngcc --properties es2015 browser module main",
+    "update:nx": "nx migrate latest"
   },
   "dependencies": {
     "@angular/animations": "11.2.11",

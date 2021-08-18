@@ -1,7 +1,18 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { ConnectableObservable, interval, Observable, of } from 'rxjs';
+import {
+  catchError,
+  concatMap,
+  delay,
+  exhaustMap,
+  map,
+  retry,
+  retryWhen,
+  share,
+  switchMap,
+  tap
+} from 'rxjs/operators';
 import { Toolbelt } from './internals';
 import { Todo, TodoApi } from './models';
 import { TodoSettings } from './todo-settings.service';
@@ -18,14 +29,43 @@ export class TodoService {
 
   loadFrequently() {
     // TODO: Introduce error handled, configured, recurring, all-mighty stream
-    return this.query().pipe(
+    // exhaustMap
+    // switchMap
+    // concatMap
+    // return interval(5000).pipe(
+    //   concatMap(() => this.query()),
+    //   share(),
+    //   tap({ error: () => this.toolbelt.offerHardReload() })
+    // );
+    return interval(5000).pipe(
+      switchMap(() => this.query()),
+      share(),
       tap({ error: () => this.toolbelt.offerHardReload() })
     );
+    // return interval(5000).pipe(
+    //   exhaustMap(() => this.query()),
+    //   share(),
+    //   tap({ error: () => this.toolbelt.offerHardReload() })
+    // );
+
+    // return this.query().pipe(
+    //   share(),
+    //   tap({ error: () => this.toolbelt.offerHardReload() })
+    // );
   }
 
   // TODO: Fix the return type of this method
   private query(): Observable<any> {
-    return this.http.get<TodoApi[]>(`${todosUrl}`);
+    return this.http.get<TodoApi[]>(`${todosUrl}`).pipe(
+      retryWhen((errr) => errr.pipe(delay(1000))),
+      tap((data) => console.log(1, data)),
+      map((data) => data.map((d) => this.toolbelt.toTodo(d))),
+      tap((data) => console.log(2, data)),
+      catchError((data) => {
+        console.error(data);
+        return this.query();
+      })
+    );
     // TODO: Apply mapping to fix display of tasks
   }
 
