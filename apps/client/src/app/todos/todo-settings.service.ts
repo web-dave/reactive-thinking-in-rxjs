@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { scan, shareReplay } from 'rxjs/operators';
+import { distinctUntilChanged, scan, shareReplay, tap } from 'rxjs/operators';
 
 export interface TodoSettingsOptions {
   isPollingEnabled: boolean;
@@ -21,10 +21,17 @@ export class TodoSettings {
   //   next={ pollingInterval: 300 }
   settings$ = this.settings$$.pipe(
     scan((prev, next) => ({ ...prev, ...next })),
-    shareReplay(1)
+    shareReplay(1),
+    distinctUntilChanged(
+      (prev, next) =>
+        prev.pollingInterval !== next.pollingInterval &&
+        prev.isPollingEnabled !== next.isPollingEnabled
+    ),
+    tap((d) => console.info('!', d))
   );
 
   update(updates: Partial<TodoSettingsOptions>) {
+    console.info('!');
     this.settings$$.next(updates);
   }
 }
